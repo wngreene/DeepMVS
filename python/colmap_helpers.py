@@ -54,7 +54,8 @@ class ImageList:
 			extrinsic[2,3] = float(words[7])
 			camera_id = int(words[8])
 			filename = words[9]
-			point_list = PointList(lines[4 + i * 2 + 1])
+			# point_list = PointList(lines[4 + i * 2 + 1])
+			point_list = None
 			self.images.append(self.Image(id, extrinsic, camera_id, filename, point_list))
 
 	def get_by_id(self, id):
@@ -133,11 +134,11 @@ class ColmapSparse:
 			raise ValueError("{:} does not exist.".format(image_list_path))
 		if not os.path.exists(camera_list_path):
 			raise ValueError("{:} does not exist.".format(camera_list_path))
-		if not os.path.exists(point_cloud_path):
-			raise ValueError("{:} does not exist.".format(point_cloud_path))
+		# if not os.path.exists(point_cloud_path):
+		# 	raise ValueError("{:} does not exist.".format(point_cloud_path))
 		self.image_list = ImageList(image_list_path)
 		self.camera_list = CameraList(camera_list_path)
-		self.point_cloud = PointCloud(point_cloud_path)
+		# self.point_cloud = PointCloud(point_cloud_path)
 		self.load_images(image_path)
 		self.resize(image_width, image_height)
 		self.estimate_max_disparities()
@@ -176,44 +177,46 @@ class ColmapSparse:
 		for image_idx in range(self.image_list.length):
 			camera = self.camera_list.get_by_id(self.image_list.images[image_idx].camera_id)
 			self.image_list.images[image_idx].rgb = cv2.resize(self.image_list.images[image_idx].rgb, (camera.width, camera.height), interpolation = cv2.INTER_AREA)
-			for point_idx in range(self.image_list.images[image_idx].point_list.length):
-				self.image_list.images[image_idx].point_list.points[point_idx].coord[0] *= camera.width_ratio
-				self.image_list.images[image_idx].point_list.points[point_idx].coord[1] *= camera.height_ratio
+			# for point_idx in range(self.image_list.images[image_idx].point_list.length):
+			# 	self.image_list.images[image_idx].point_list.points[point_idx].coord[0] *= camera.width_ratio
+			# 	self.image_list.images[image_idx].point_list.points[point_idx].coord[1] *= camera.height_ratio
 
 	def estimate_max_disparities(self, percentile = 0.99, stretch = 1.333333):
 		for (img_idx, image) in enumerate(self.image_list.images):
-			camera = self.camera_list.get_by_id(image.camera_id)
-			disparity_list = []
-			for (point_idx, point) in enumerate(self.point_cloud.points):
-				coord = image.extrinsic.dot(point.coord)
-				new_x = (coord[0] / coord[2] * camera.fx + camera.cx) 
-				new_y = (coord[1] / coord[2] * camera.fy + camera.cy) 
-				new_d = 1.0 / coord[2]
-				if new_x >= 0.0 and new_x < camera.width and new_y >= 0.0 and new_y < camera.height and new_d > 0.0:
-					disparity_list.append(new_d)
-			disparity_list = np.sort(np.array(disparity_list))
-			self.image_list.images[img_idx].estimated_max_disparity = disparity_list[int(disparity_list.shape[0] * percentile)] * stretch
+			# camera = self.camera_list.get_by_id(image.camera_id)
+			# disparity_list = []
+			# for (point_idx, point) in enumerate(self.point_cloud.points):
+			# 	coord = image.extrinsic.dot(point.coord)
+			# 	new_x = (coord[0] / coord[2] * camera.fx + camera.cx)
+			# 	new_y = (coord[1] / coord[2] * camera.fy + camera.cy)
+			# 	new_d = 1.0 / coord[2]
+			# 	if new_x >= 0.0 and new_x < camera.width and new_y >= 0.0 and new_y < camera.height and new_d > 0.0:
+			# 		disparity_list.append(new_d)
+			# disparity_list = np.sort(np.array(disparity_list))
+			# self.image_list.images[img_idx].estimated_max_disparity = disparity_list[int(disparity_list.shape[0] * percentile)] * stretch
+
+                        self.image_list.images[img_idx].estimated_max_disparity = 192
 
 	def generate_neighbor_list(self, max_num_neighbors):
-		point_id_list = []
+		# point_id_list = []
+		# for (ref_idx, ref_image) in enumerate(self.image_list.images):
+		# 	point_id_set = set()
+		# 	for (ref_point_idx, ref_point) in enumerate(ref_image.point_list.points):
+		# 		point_id_set.add(ref_point.id)
+		# 	point_id_list.append(point_id_set)
 		for (ref_idx, ref_image) in enumerate(self.image_list.images):
-			point_id_set = set()
-			for (ref_point_idx, ref_point) in enumerate(ref_image.point_list.points):
-				point_id_set.add(ref_point.id)
-			point_id_list.append(point_id_set)
-		for (ref_idx, ref_image) in enumerate(self.image_list.images):
-			shared_feature_list = []
-			for (n_idx, n_image) in enumerate(self.image_list.images):
-				if n_idx == ref_idx:
-					shared_feature_list.append(0)
-					continue
-				shared_feature_list.append(len(point_id_list[ref_idx] & point_id_list[n_idx]))
-			index_order = np.argsort(np.array(shared_feature_list))[::-1]
-			neighbor_list = []
-			for idx in index_order:
-				if shared_feature_list[idx] == 0:
-					break
-				neighbor_list.append(idx)
-				if len(neighbor_list) == max_num_neighbors:
-					break
-			self.image_list.images[ref_idx].neighbor_list = neighbor_list
+			# shared_feature_list = []
+			# for (n_idx, n_image) in enumerate(self.image_list.images):
+			# 	if n_idx == ref_idx:
+			# 		shared_feature_list.append(0)
+			# 		continue
+			# 	shared_feature_list.append(len(point_id_list[ref_idx] & point_id_list[n_idx]))
+			# index_order = np.argsort(np.array(shared_feature_list))[::-1]
+			# neighbor_list = []
+			# for idx in index_order:
+			# 	if shared_feature_list[idx] == 0:
+			# 		break
+			# 	neighbor_list.append(idx)
+			# 	if len(neighbor_list) == max_num_neighbors:
+			# 		break
+			self.image_list.images[ref_idx].neighbor_list = [(ref_idx + 1) % len(self.image_list.images)]

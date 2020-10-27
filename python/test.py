@@ -15,6 +15,17 @@ import imageio
 from model import DeepMVS
 from generate_volume_test import generate_volume_test
 
+def start_timer():
+        torch.cuda.synchronize()
+        tick = torch.cuda.Event(enable_timing=True)
+        tock = torch.cuda.Event(enable_timing=True)
+        tick.record()
+        return tick, tock
+
+def stop_timer(tick, tock):
+        tock.record()
+        torch.cuda.synchronize()
+        return tick.elapsed_time(tock)
 
 # Parse arguments
 parser = argparse.ArgumentParser(description = "Run DeepMVS on a sequence.")
@@ -125,6 +136,8 @@ log_file.flush()
 
 # Loop through all images.
 for (ref_image_idx, ref_image) in enumerate(sparse_model.image_list.images):
+        tick, tock = start_timer()
+
 	# Check if output already exists.
 	if not overwrite and os.path.exists(os.path.join(output_path, "{:}.output.npy".format(ref_image.filename))):
 		print >> log_file, "Skipped {:} since the output already exists.".format(ref_image.filename)
@@ -285,6 +298,9 @@ for (ref_image_idx, ref_image) in enumerate(sparse_model.image_list.images):
 	imageio.imwrite(os.path.join(output_path, "{:}.output.png".format(ref_image.filename)), (new_predict / ref_image.estimated_max_disparity).clip(0.0, 1.0))
 	print >> log_file, "Result has been saved to {:}.".format(os.path.join(output_path, "{:}.output.npy".format(ref_image.filename)))
 	log_file.flush()
+
+        time_ms = stop_timer(tick, tock)
+        print >> log_file, "Elapsed time [sec]: {}".format(time_ms / 1000)
 
 # Terminate worker threads.
 shared_data["stop"] = True

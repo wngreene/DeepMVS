@@ -38,7 +38,7 @@ def main():
 
             q_world_in_cam = Quaternion(matrix=R_world_in_cam, atol=1e-3, rtol=1e-3)
 
-            target.write("{}, {}, {}, {}, {}, {}, {}, {}, {}, {:06d}.jpg\n".format(
+            target.write("{} {} {} {} {} {} {} {} {} {:06d}.jpg\n".format(
                 pose_idx,
                 q_world_in_cam.w, q_world_in_cam.x, q_world_in_cam.y, q_world_in_cam.z,
                 t_world_in_cam[0], t_world_in_cam[1], t_world_in_cam[2],

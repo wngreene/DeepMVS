@@ -9,8 +9,8 @@ def download_trained_model(path = None):
 		os.mkdir(path)
 	print "Downloading trained model..."
 	subprocess.call(
-		"cd {:} ;".format(path) + 
-		"wget -O DeepMVS_final.model https://www.dropbox.com/s/dcaip7n3z0yk7lx/DeepMVS_final.model?dl=1 ;",
+		"cd {:} ;".format(path) +
+		"wget -O DeepMVS_final.model https://drive.google.com/file/d/1DVhvFot_ePiHNTrAiGSVegFRz_FCYiCY/view?usp=sharing ;",
 		shell = True
 	)
 	print "Successfully downloaded trained model."
